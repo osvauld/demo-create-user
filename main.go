@@ -1,4 +1,3 @@
-// Create a simple api server
 package main
 
 import (
@@ -10,7 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/osvauld/demo-user/db"
+	"github.com/osvauld/demo-create-user/db"
 )
 
 var dbPointer *sql.DB

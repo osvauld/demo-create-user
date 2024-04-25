@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/osvauld/demo-user/db"
+	"github.com/osvauld/demo-create-user/db"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func createRandomUser() (string, string) {
@@ -17,14 +19,28 @@ func createRandomUser() (string, string) {
 	return username, tempPassword
 }
 
+func HashPassword(password string) (string, error) {
+	// The second argument is the cost of hashing, which determines how much time is needed to calculate the hash.
+	// The higher the cost, the more secure the hash, but the longer it will take to generate.
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	return string(bytes), err
+}
+
 func createDemoUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	username, tempPassword := createRandomUser()
 
-	_, err := db.CreateUser(dbPointer, db.CreateUserParams{
+	hashedPassword, err := HashPassword(tempPassword)
+	if err != nil {
+		log.Println("Error hashing password: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.CreateUser(dbPointer, db.CreateUserParams{
 		Username:     username,
 		Name:         username,
-		TempPassword: tempPassword,
+		TempPassword: hashedPassword,
 	})
 
 	if err != nil {
