@@ -14,6 +14,10 @@ import (
 
 var dbPointer *sql.DB
 
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "I'm alive!")
+}
+
 func main() {
 
 	err := godotenv.Load()
@@ -24,12 +28,11 @@ func main() {
 	dbUrl := os.Getenv("DB_URL")
 	dbPointer = db.CreateDBConnection(dbUrl)
 
-	http.HandleFunc("/healthCheck", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "I'm alive!")
-	})
+	mux := http.NewServeMux()
+	mux.Handle("/", corsMiddleware(http.HandlerFunc(createDemoUserHandler)))
 
-	http.HandleFunc("/createDemoUser", createDemoUserHandler)
+	mux.Handle("/healthCheck", http.HandlerFunc(healthCheckHandler))
 
 	log.Println("Server running on port :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
